@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:project_nassau/app_controller.dart';
-import 'package:project_nassau/home_page.dart';
-import 'Login_page.dart';
-import 'galeria.dart';
+import 'package:project_nassau/controllers/app_controller.dart';
+import 'package:project_nassau/views/home_page.dart';
+import 'package:project_nassau/views/login_page.dart';
+import 'package:project_nassau/views/galeria.dart';
 import 'roleta/roleta_page.dart';
 
 class AppWidget extends StatelessWidget{
