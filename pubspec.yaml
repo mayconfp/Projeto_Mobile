@@ -22,15 +22,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
+  assets:
+    - assets/imagens/
   fonts:
     - family: GameFont
       fonts:
         - asset: assets/fonts/RubikGemstones-Regular.ttf
-
-  assets:
-    - assets/imagens/bg.jpeg
-    - assets/imagens/roleta_base.png
-    - assets/imagens/roleta_completa.png
-    - assets/imagens/roleta_com_botoes.png
-    - assets/imagens/tela.jpeg

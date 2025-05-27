@@ -1,139 +1,344 @@
-import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
+import 'package:flutter/cupertino.dart';
 
-class GameRoleta extends StatefulWidget {
-  const GameRoleta({super.key});
+class Game extends StatefulWidget {
+  const Game({Key? key}) : super(key: key);
 
   @override
-  State<GameRoleta> createState() => _GameRoletaState();
+  GameState createState() => GameState();
 }
 
-class _GameRoletaState extends State<GameRoleta>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-  double _angle = 0.0;
-  bool _girando = false;
+class GameState extends State<Game> with SingleTickerProviderStateMixin {
+  List<double> sectors = [100, 20, 0.15, 50, 20, 100, 50, 20];
+  int randomSectorIndex = -1;
+  double doubleSectorRadians = 0;
+  bool spinning = false;
+  double earnedValue = 0;
+  int totalEarnings = 0;
+  int spins = 0;
+
+  late AnimationController controller;
+  late Animation<double> animation;
 
   @override
   void initState() {
     super.initState();
-
-    _controller = AnimationController(
-      duration: const Duration(seconds: 3),
+    generateSectorRadians();
+    controller = AnimationController(
+      duration: const Duration(milliseconds: 3600),
       vsync: this,
     );
-
-    // Inicializa _animation para evitar erro de uso antes da rotação
-    _animation = AlwaysStoppedAnimation(_angle);
-  }
-
-  void girar() {
-    if (_girando) return;
-
-    setState(() => _girando = true);
-
-    final random = Random().nextDouble() * 6 * pi;
-    _animation =
-        Tween<double>(begin: _angle, end: _angle + random).animate(
-            CurvedAnimation(parent: _controller, curve: Curves.decelerate),
-          )
-          ..addListener(() => setState(() {}))
+    final curvedAnimation = CurvedAnimation(
+      parent: controller,
+      curve: Curves.decelerate,
+    );
+    animation =
+        Tween<double>(begin: 0, end: 1).animate(curvedAnimation)
+          ..addListener(() {
+            if (controller.isAnimating) {
+              setState(() {
+                spinning = true;
+              });
+            }
+          })
           ..addStatusListener((status) {
             if (status == AnimationStatus.completed) {
-              setState(() => _girando = false);
-              Navigator.pushNamed(context, '/galeria');
+              setState(() {
+                recordStats();
+                spinning = false;
+              });
             }
           });
+  }
 
-    _controller.reset();
-    _controller.forward();
-    _angle += random;
+  void generateSectorRadians() {
+    doubleSectorRadians = 2 * math.pi / sectors.length;
+  }
+
+  void recordStats() {
+    earnedValue = sectors[randomSectorIndex];
+    totalEarnings = totalEarnings + earnedValue.toInt();
+    spins = spins + 1;
+  }
+
+  void resetGame() {
+    setState(() {
+      earnedValue = 0;
+      totalEarnings = 0;
+      spins = 0;
+      randomSectorIndex = -1;
+      controller.reset();
+      spinning = false;
+    });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    controller.dispose();
     super.dispose();
+  }
+
+  void spin() {
+    if (!spinning) {
+      setState(() {
+        randomSectorIndex = math.Random().nextInt(sectors.length);
+        double randomRadian = math.Random().nextDouble() * math.pi * 2;
+        controller.reset();
+        animation =
+            Tween<double>(
+                begin: 0,
+                end:
+                    randomRadian +
+                    (2 * math.pi * sectors.length) +
+                    (doubleSectorRadians * randomSectorIndex),
+              ).animate(
+                CurvedAnimation(parent: controller, curve: Curves.decelerate),
+              )
+              ..addListener(() {
+                setState(() {});
+              })
+              ..addStatusListener((status) {
+                if (status == AnimationStatus.completed) {
+                  setState(() {
+                    recordStats();
+                    spinning = false;
+                  });
+                }
+              });
+        controller.forward();
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return Scaffold(backgroundColor: Colors.brown, body: body());
+  }
+
+  Widget body() {
+    return Container(
+      height: double.infinity,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage("assets/imagens/bg.jpeg"),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: gameContent(),
+    );
+  }
+
+Widget gameContent() {
+  return Center( // ou Padding / Align conforme o comportamento desejado
+    child: Column(
+      mainAxisSize: MainAxisSize.min, // importante para evitar estouro de layout
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Fundo
-        Container(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/imagens/bg.jpeg'),
-              fit: BoxFit.cover,
+        _buildGameTitle(),
+        const SizedBox(height: 20),
+        _buildGameWheel(),
+        const SizedBox(height: 10),
+        _buildGameActions(),
+        const SizedBox(height: 20),
+        _buildResetButton(),
+        const SizedBox(height: 30),
+        _buildGameStats(),
+      ],
+    ),
+  );
+}
+
+  Widget _buildGameTitle() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFAB47BC), Color(0xFF8E24AA)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 6,
+              offset: Offset(2, 2),
+            ),
+          ],
+        ),
+        child: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+          child: Text(
+            "Together",
+            style: TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: 1.5,
             ),
           ),
         ),
+      ),
+    );
+  }
 
-        // Botão Voltar
-        Positioned(
-          top: 40,
-          left: 10,
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
-            onPressed: () => Navigator.pop(context),
-            tooltip: 'Voltar',
+  Widget _buildGameWheel() {
+    final beltDiameter = MediaQuery.of(context).size.width * 0.80;
+    final wheelDiameter = beltDiameter * 0.82;
+
+    return SizedBox(
+      height: beltDiameter,
+      width: beltDiameter,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Belt fixo (fundo)
+          Image.asset(
+            "assets/imagens/belt.png",
+            width: beltDiameter,
+            height: beltDiameter,
+            fit: BoxFit.contain,
           ),
-        ),
 
-        // Roleta + Botões
-        Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Transform.rotate(
-                angle: _animation.value,
-                child: Image.asset(
-                  'assets/imagens/roleta_base.png', // imagem SEM fundo embutido
-                  width: 330,
-                  height: 330,
+          
+          Padding(
+            padding: const EdgeInsets.only(
+              top: 30,
+            ), 
+            child: Transform.rotate(
+              angle: animation.value,
+              child: Image.asset(
+                "assets/imagens/wheel.png",
+                width: wheelDiameter,
+                height: wheelDiameter,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+
+          // Botão invisível no centro para girar
+          Positioned.fill(
+            child: Center(
+              child: GestureDetector(
+                onTap: spin,
+                child: Container(
+                  width: beltDiameter * 0.28,
+                  height: beltDiameter * 0.28,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
-
-              const SizedBox(height: 30),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: _girando ? null : girar,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: const Text("PLAY", style: TextStyle(fontSize: 18)),
-                  ),
-                  const SizedBox(width: 20),
-                  ElevatedButton(
-                    onPressed: _girando ? null : () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: const Text("STOP", style: TextStyle(fontSize: 18)),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGameActions() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        Column(
+          children: [
+            const Text(
+              "Earned",
+              style: TextStyle(color: Colors.black, fontSize: 16),
+            ),
+            Text(
+              "\$${earnedValue.toStringAsFixed(earnedValue == 0.15 ? 2 : 0)}",
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        Column(
+          children: [
+            const Text(
+              "Gire",
+              style: TextStyle(color: Colors.black, fontSize: 16),
+            ),
+            Text(
+              spins.toString(),
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResetButton() {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: CupertinoColors.systemYellow,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 40),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      onPressed: resetGame,
+      child: const Text(
+        "Reset Spin",
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGameStats() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildTitleColumn(
+            title: "Earned",
+            value:
+                "\$${earnedValue.toStringAsFixed(earnedValue == 0.15 ? 2 : 0)}",
+          ),
+          _buildTitleColumn(
+            title: "Earnings",
+            value: "\$${totalEarnings.toStringAsFixed(0)}",
+          ),
+          _buildTitleColumn(title: "Spins", value: spins.toString()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTitleColumn({required String title, required String value}) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          title,
+          style: const TextStyle(color: Colors.white70, fontSize: 14),
         ),
       ],
     );

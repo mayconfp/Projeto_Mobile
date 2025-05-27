@@ -5,6 +5,8 @@ import 'package:project_nassau/views/login_page.dart';
 import 'package:project_nassau/views/galeria.dart';
 import 'roleta/roleta_page.dart';
 
+
+
 class AppWidget extends StatelessWidget{
   
   @override
