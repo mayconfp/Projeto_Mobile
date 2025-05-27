@@ -26,7 +26,7 @@ class HomePageState extends State<HomePage> {
               'assets/imagens/tela.jpeg', 
               width: double.infinity,
               height: double.infinity,
-              fit: BoxFit.cover,
+              fit: BoxFit.contain,
             ),
           ),
 

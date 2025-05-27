@@ -130,25 +130,27 @@ class GameState extends State<Game> with SingleTickerProviderStateMixin {
     );
   }
 
-Widget gameContent() {
-  return Center( // ou Padding / Align conforme o comportamento desejado
-    child: Column(
-      mainAxisSize: MainAxisSize.min, // importante para evitar estouro de layout
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildGameTitle(),
-        const SizedBox(height: 20),
-        _buildGameWheel(),
-        const SizedBox(height: 10),
-        _buildGameActions(),
-        const SizedBox(height: 20),
-        _buildResetButton(),
-        const SizedBox(height: 30),
-        _buildGameStats(),
-      ],
-    ),
-  );
-}
+  Widget gameContent() {
+    return Center(
+      // ou Padding / Align conforme o comportamento desejado
+      child: Column(
+        mainAxisSize:
+            MainAxisSize.min, // importante para evitar estouro de layout
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildGameTitle(),
+          const SizedBox(height: 20),
+          _buildGameWheel(),
+          const SizedBox(height: 10),
+          _buildGameActions(),
+          const SizedBox(height: 20),
+          _buildResetButton(),
+          const SizedBox(height: 30),
+          _buildGameStats(),
+        ],
+      ),
+    );
+  }
 
   Widget _buildGameTitle() {
     return Padding(
@@ -201,18 +203,22 @@ Widget gameContent() {
             fit: BoxFit.contain,
           ),
 
-          
-          Padding(
-            padding: const EdgeInsets.only(
-              top: 30,
-            ), 
-            child: Transform.rotate(
-              angle: animation.value,
-              child: Image.asset(
-                "assets/imagens/wheel.png",
-                width: wheelDiameter,
-                height: wheelDiameter,
-                fit: BoxFit.contain,
+          Positioned(
+            top: 41,
+            left: 5,
+            right: 0,
+            child: Align(
+              alignment: Alignment.center,
+              child: Transform.rotate(
+                angle: animation.value,
+                child: ClipOval(
+                  child: Image.asset(
+                    "assets/imagens/wheel.png",
+                    width: wheelDiameter,
+                    height: wheelDiameter,
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
             ),
           ),
