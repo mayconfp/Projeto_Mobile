@@ -10,13 +10,25 @@ class Game extends StatefulWidget {
 }
 
 class GameState extends State<Game> with SingleTickerProviderStateMixin {
-  List<double> sectors = [100, 20, 0.15, 50, 20, 100, 50, 20];
+  // ✅ Lista de setores baseada na imagem da roleta (10 setores)
+  final List<String> activities = [
+    'Barzinho',
+    'Parque',
+    'Parque',
+    'Almoço',
+    'Netflix',
+    'Almoço',
+    'Netflix',
+    'Passeio',
+    'Netflix',
+    'Netflix',
+  ];
+
   int randomSectorIndex = -1;
   double doubleSectorRadians = 0;
   bool spinning = false;
-  double earnedValue = 0;
-  int totalEarnings = 0;
   int spins = 0;
+  String? selectedActivity;
 
   late AnimationController controller;
   late Animation<double> animation;
@@ -29,43 +41,49 @@ class GameState extends State<Game> with SingleTickerProviderStateMixin {
       duration: const Duration(milliseconds: 3600),
       vsync: this,
     );
+
     final curvedAnimation = CurvedAnimation(
       parent: controller,
       curve: Curves.decelerate,
     );
-    animation =
-        Tween<double>(begin: 0, end: 1).animate(curvedAnimation)
-          ..addListener(() {
-            if (controller.isAnimating) {
-              setState(() {
-                spinning = true;
-              });
-            }
-          })
-          ..addStatusListener((status) {
-            if (status == AnimationStatus.completed) {
-              setState(() {
-                recordStats();
-                spinning = false;
-              });
-            }
+
+    animation = Tween<double>(begin: 0, end: 1).animate(curvedAnimation)
+      ..addListener(() {
+        if (controller.isAnimating) {
+          setState(() => spinning = true);
+        }
+      })
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          setState(() {
+            recordStats();
+            spinning = false;
           });
+        }
+      });
   }
 
   void generateSectorRadians() {
-    doubleSectorRadians = 2 * math.pi / sectors.length;
+    doubleSectorRadians = 2 * math.pi / activities.length;
   }
 
   void recordStats() {
-    earnedValue = sectors[randomSectorIndex];
-    totalEarnings = totalEarnings + earnedValue.toInt();
-    spins = spins + 1;
+    // Calcula o setor com base na rotação final
+    double angle = animation.value % (2 * math.pi);
+    double correctedAngle =
+        (2 * math.pi - angle + doubleSectorRadians / 2) % (2 * math.pi);
+
+    int index = (correctedAngle ~/ doubleSectorRadians) % activities.length;
+
+    setState(() {
+      selectedActivity = activities[index];
+      spins++;
+    });
   }
 
   void resetGame() {
     setState(() {
-      earnedValue = 0;
-      totalEarnings = 0;
+      selectedActivity = null;
       spins = 0;
       randomSectorIndex = -1;
       controller.reset();
@@ -82,30 +100,28 @@ class GameState extends State<Game> with SingleTickerProviderStateMixin {
   void spin() {
     if (!spinning) {
       setState(() {
-        randomSectorIndex = math.Random().nextInt(sectors.length);
+        randomSectorIndex = math.Random().nextInt(activities.length);
         double randomRadian = math.Random().nextDouble() * math.pi * 2;
+
+        // ✅ Gira de 5 a 8 voltas + ângulo do setor
+        double totalRotation = randomRadian +
+            (2 * math.pi * activities.length) +
+            (doubleSectorRadians * randomSectorIndex);
+
         controller.reset();
-        animation =
-            Tween<double>(
-                begin: 0,
-                end:
-                    randomRadian +
-                    (2 * math.pi * sectors.length) +
-                    (doubleSectorRadians * randomSectorIndex),
-              ).animate(
-                CurvedAnimation(parent: controller, curve: Curves.decelerate),
-              )
-              ..addListener(() {
-                setState(() {});
-              })
-              ..addStatusListener((status) {
-                if (status == AnimationStatus.completed) {
-                  setState(() {
-                    recordStats();
-                    spinning = false;
-                  });
-                }
+        animation = Tween<double>(begin: 0, end: totalRotation).animate(
+          CurvedAnimation(parent: controller, curve: Curves.decelerate),
+        )
+          ..addListener(() => setState(() {}))
+          ..addStatusListener((status) {
+            if (status == AnimationStatus.completed) {
+              setState(() {
+                recordStats();
+                spinning = false;
               });
+            }
+          });
+
         controller.forward();
       });
     }
@@ -132,21 +148,17 @@ class GameState extends State<Game> with SingleTickerProviderStateMixin {
 
   Widget gameContent() {
     return Center(
-      // ou Padding / Align conforme o comportamento desejado
       child: Column(
-        mainAxisSize:
-            MainAxisSize.min, // importante para evitar estouro de layout
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _buildGameTitle(),
           const SizedBox(height: 20),
           _buildGameWheel(),
-          const SizedBox(height: 10),
-          _buildGameActions(),
+          const SizedBox(height: 20),
+          _buildActivityDisplay(),
           const SizedBox(height: 20),
           _buildResetButton(),
-          const SizedBox(height: 30),
-          _buildGameStats(),
         ],
       ),
     );
@@ -195,14 +207,12 @@ class GameState extends State<Game> with SingleTickerProviderStateMixin {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Belt fixo (fundo)
           Image.asset(
             "assets/imagens/belt.png",
             width: beltDiameter,
             height: beltDiameter,
             fit: BoxFit.contain,
           ),
-
           Positioned(
             top: 41,
             left: 5,
@@ -222,8 +232,6 @@ class GameState extends State<Game> with SingleTickerProviderStateMixin {
               ),
             ),
           ),
-
-          // Botão invisível no centro para girar
           Positioned.fill(
             child: Center(
               child: GestureDetector(
@@ -231,8 +239,7 @@ class GameState extends State<Game> with SingleTickerProviderStateMixin {
                 child: Container(
                   width: beltDiameter * 0.28,
                   height: beltDiameter * 0.28,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Colors.transparent,
                     shape: BoxShape.circle,
                   ),
@@ -245,108 +252,62 @@ class GameState extends State<Game> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget _buildGameActions() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        Column(
-          children: [
-            const Text(
-              "Earned",
-              style: TextStyle(color: Colors.black, fontSize: 16),
-            ),
-            Text(
-              "\$${earnedValue.toStringAsFixed(earnedValue == 0.15 ? 2 : 0)}",
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+  Widget _buildActivityDisplay() {
+    return selectedActivity != null
+        ? Column(
+            children: [
+              const Text(
+                'Atividade sorteada:',
+                style: TextStyle(color: Colors.white, fontSize: 20),
               ),
-            ),
-          ],
-        ),
-        Column(
-          children: [
-            const Text(
-              "Gire",
-              style: TextStyle(color: Colors.black, fontSize: 16),
-            ),
-            Text(
-              spins.toString(),
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+              const SizedBox(height: 8),
+              Text(
+                selectedActivity!,
+                style: const TextStyle(
+                  color: Colors.yellowAccent,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
-    );
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/galeria');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 223, 208, 215),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 12,
+                  ),
+                ),
+                icon: const Icon(Icons.photo_library),
+                label: const Text(
+                  'Registrar momento',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+            ],
+          )
+        : const SizedBox.shrink();
   }
 
   Widget _buildResetButton() {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: CupertinoColors.systemYellow,
+        backgroundColor: const Color.fromARGB(255, 209, 89, 125),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 40),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       onPressed: resetGame,
       child: const Text(
-        "Reset Spin",
+        "Resetar Roleta",
         style: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
           color: Colors.black,
         ),
       ),
-    );
-  }
-
-  Widget _buildGameStats() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.6),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildTitleColumn(
-            title: "Earned",
-            value:
-                "\$${earnedValue.toStringAsFixed(earnedValue == 0.15 ? 2 : 0)}",
-          ),
-          _buildTitleColumn(
-            title: "Earnings",
-            value: "\$${totalEarnings.toStringAsFixed(0)}",
-          ),
-          _buildTitleColumn(title: "Spins", value: spins.toString()),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTitleColumn({required String title, required String value}) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          title,
-          style: const TextStyle(color: Colors.white70, fontSize: 14),
-        ),
-      ],
     );
   }
 }

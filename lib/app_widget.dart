@@ -4,7 +4,7 @@ import 'package:project_nassau/views/home_page.dart';
 import 'package:project_nassau/views/login_page.dart';
 import 'package:project_nassau/views/galeria.dart';
 import 'roleta/roleta_page.dart';
-
+import 'views/cadastro_page.dart';
 
 
 class AppWidget extends StatelessWidget{
@@ -25,6 +25,8 @@ class AppWidget extends StatelessWidget{
         '/home': (context) => HomePage(),
         '/roleta': (context) => const RoletaPage(),
         '/galeria': (context) => GaleriaPersistente(),
+        '/cadastro': (context) => CadastroPage(),
+
       },
     );
     });
