@@ -11,17 +11,15 @@ class Game extends StatefulWidget {
 
 class GameState extends State<Game> with SingleTickerProviderStateMixin {
   // ✅ Lista de setores baseada na imagem da roleta (10 setores)
-  final List<String> activities = [
+  List<String> activities = [
+    'Musical do casal',
+    'Um dia especial',
     'Barzinho',
-    'Parque',
-    'Parque',
-    'Almoço',
     'Netflix',
-    'Almoço',
-    'Netflix',
-    'Passeio',
-    'Netflix',
-    'Netflix',
+    'Museu da gente sergipana',
+    'Jantar romântico',
+    'Orla',
+    'Prato preferido',
   ];
 
   int randomSectorIndex = -1;
@@ -47,20 +45,21 @@ class GameState extends State<Game> with SingleTickerProviderStateMixin {
       curve: Curves.decelerate,
     );
 
-    animation = Tween<double>(begin: 0, end: 1).animate(curvedAnimation)
-      ..addListener(() {
-        if (controller.isAnimating) {
-          setState(() => spinning = true);
-        }
-      })
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          setState(() {
-            recordStats();
-            spinning = false;
+    animation =
+        Tween<double>(begin: 0, end: 1).animate(curvedAnimation)
+          ..addListener(() {
+            if (controller.isAnimating) {
+              setState(() => spinning = true);
+            }
+          })
+          ..addStatusListener((status) {
+            if (status == AnimationStatus.completed) {
+              setState(() {
+                recordStats();
+                spinning = false;
+              });
+            }
           });
-        }
-      });
   }
 
   void generateSectorRadians() {
@@ -104,23 +103,25 @@ class GameState extends State<Game> with SingleTickerProviderStateMixin {
         double randomRadian = math.Random().nextDouble() * math.pi * 2;
 
         // ✅ Gira de 5 a 8 voltas + ângulo do setor
-        double totalRotation = randomRadian +
+        double totalRotation =
+            randomRadian +
             (2 * math.pi * activities.length) +
             (doubleSectorRadians * randomSectorIndex);
 
         controller.reset();
-        animation = Tween<double>(begin: 0, end: totalRotation).animate(
-          CurvedAnimation(parent: controller, curve: Curves.decelerate),
-        )
-          ..addListener(() => setState(() {}))
-          ..addStatusListener((status) {
-            if (status == AnimationStatus.completed) {
-              setState(() {
-                recordStats();
-                spinning = false;
+        animation =
+            Tween<double>(begin: 0, end: totalRotation).animate(
+                CurvedAnimation(parent: controller, curve: Curves.decelerate),
+              )
+              ..addListener(() => setState(() {}))
+              ..addStatusListener((status) {
+                if (status == AnimationStatus.completed) {
+                  setState(() {
+                    recordStats();
+                    spinning = false;
+                  });
+                }
               });
-            }
-          });
 
         controller.forward();
       });
@@ -198,8 +199,8 @@ class GameState extends State<Game> with SingleTickerProviderStateMixin {
   }
 
   Widget _buildGameWheel() {
-    final beltDiameter = MediaQuery.of(context).size.width * 0.80;
-    final wheelDiameter = beltDiameter * 0.82;
+    final beltDiameter = MediaQuery.of(context).size.width * 0.85;
+    final wheelDiameter = beltDiameter * 0.85;
 
     return SizedBox(
       height: beltDiameter,
@@ -214,7 +215,7 @@ class GameState extends State<Game> with SingleTickerProviderStateMixin {
             fit: BoxFit.contain,
           ),
           Positioned(
-            top: 41,
+            top: 39,
             left: 5,
             right: 0,
             child: Align(
@@ -223,25 +224,10 @@ class GameState extends State<Game> with SingleTickerProviderStateMixin {
                 angle: animation.value,
                 child: ClipOval(
                   child: Image.asset(
-                    "assets/imagens/wheel.png",
+                    "assets/imagens/wheel1.jpeg",
                     width: wheelDiameter,
                     height: wheelDiameter,
                     fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Positioned.fill(
-            child: Center(
-              child: GestureDetector(
-                onTap: spin,
-                child: Container(
-                  width: beltDiameter * 0.28,
-                  height: beltDiameter * 0.28,
-                  decoration: const BoxDecoration(
-                    color: Colors.transparent,
-                    shape: BoxShape.circle,
                   ),
                 ),
               ),
@@ -253,49 +239,65 @@ class GameState extends State<Game> with SingleTickerProviderStateMixin {
   }
 
   Widget _buildActivityDisplay() {
-    return selectedActivity != null
-        ? Column(
-            children: [
-              const Text(
-                'Atividade sorteada:',
-                style: TextStyle(color: Colors.white, fontSize: 20),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                selectedActivity!,
-                style: const TextStyle(
-                  color: Colors.yellowAccent,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/galeria');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 223, 208, 215),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 12,
-                  ),
-                ),
-                icon: const Icon(Icons.photo_library),
-                label: const Text(
-                  'Registrar momento',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ),
-            ],
-          )
-        : const SizedBox.shrink();
+    return Column(
+      children: [
+        if (selectedActivity != null) ...[
+          const Text(
+            'Atividade sorteada:',
+            style: TextStyle(color: Colors.white, fontSize: 20),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            selectedActivity!,
+            style: const TextStyle(
+              color: Colors.yellowAccent,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pushNamed(context, '/galeria');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 203, 31, 111),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            ),
+            icon: const Icon(Icons.photo_library),
+            label: const Text(
+              'Registrar momento',
+              style: TextStyle(fontSize: 16, color: Colors.black),
+            ),
+          ),
+        ],
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: spin,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color.fromARGB(255, 203, 31, 111),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 40),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: const Text(
+            'Girar Roleta',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildResetButton() {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color.fromARGB(255, 209, 89, 125),
+        backgroundColor: const Color.fromARGB(255, 203, 31, 111),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 40),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),

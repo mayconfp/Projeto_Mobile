@@ -99,7 +99,7 @@ class _CadastroPageState extends State<CadastroPage> {
   }
 
   Future<void> _cadastrar() async {
-    final url = Uri.parse('http://192.168.0.4:3000/login'); // use seu IP local real
+    final url = Uri.parse('http://192.168.0.4:3000/login'); 
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
