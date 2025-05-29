@@ -215,7 +215,7 @@ class GameState extends State<Game> with SingleTickerProviderStateMixin {
             fit: BoxFit.contain,
           ),
           Positioned(
-            top: 39,
+            top: 42,
             left: 5,
             right: 0,
             child: Align(

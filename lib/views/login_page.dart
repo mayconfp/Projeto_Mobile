@@ -106,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         onPressed: () async {
                           final url = Uri.parse(
-                            'http://192.168.0.4:3000/authenticate'
+                            'https://ef9d-2804-5dc-315-d900-b56a-da70-e0f3-6e07.ngrok-free.app/authenticate',
                           ); // ou localhost/teste no navegador
                           final response = await http.post(
                             url,

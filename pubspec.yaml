@@ -1,4 +1,4 @@
-name: project_nassau
+name: together
 description: "A new Flutter project."
 publish_to: 'none'
 version: 1.0.0+1
@@ -21,6 +21,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1 
 
 flutter:
   uses-material-design: true
@@ -31,3 +32,10 @@ flutter:
     - family: GameFont
       fonts:
         - asset: assets/fonts/RubikGemstones-Regular.ttf
+
+flutter_icons: 
+  android: true
+  ios: true
+  image_path: "assets/icones/icon.png"
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/icones/icon.png"

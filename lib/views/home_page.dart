@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:project_nassau/controllers/app_controller.dart';
+import 'package:together/controllers/app_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,48 +15,50 @@ class HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Together"),
-        actions: const [
-          CustomSwitch(),
+        actions: [
+          const CustomSwitch(),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            onPressed: _logout,
+          ),
         ],
       ),
-
       body: Stack(
         children: [
           SizedBox(
             child: Image.asset(
-              'assets/imagens/tela.jpeg', 
+              'assets/imagens/tela.jpeg',
               width: double.infinity,
               height: double.infinity,
               fit: BoxFit.contain,
             ),
           ),
-
         ],
       ),
-
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           FloatingActionButton.extended(
             heroTag: 'galeria',
-            icon: const Icon(Icons.photo_library, color: Colors.white,size: 35,),
+            icon: const Icon(Icons.photo_library, color: Colors.white, size: 35),
             label: const Text(
               'Galeria',
-            style: TextStyle(color: Colors.white, fontSize: 18),
+              style: TextStyle(color: Colors.white, fontSize: 18),
             ),
-            backgroundColor: Color(0xFF6A1B9A),
+            backgroundColor: const Color(0xFF6A1B9A),
             onPressed: () {
               Navigator.pushNamed(context, '/galeria');
             },
           ),
           FloatingActionButton.extended(
             heroTag: 'roleta',
-            icon: const Icon(Icons.casino,color: Colors.white,size: 35,),
+            icon: const Icon(Icons.casino, color: Colors.white, size: 35),
             label: const Text(
               'Roleta',
               style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-            backgroundColor: Color(0xFF6A1B9A),
+            ),
+            backgroundColor: const Color(0xFF6A1B9A),
             onPressed: () {
               Navigator.pushNamed(context, '/roleta');
             },
@@ -65,9 +68,17 @@ class HomePageState extends State<HomePage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
+
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('jwt_token'); // Remove token
+
+    // Navega para login substituindo a rota atual
+    Navigator.of(context).pushReplacementNamed('/login');
+  }
 }
 
-class CustomSwitch extends  StatelessWidget  {
+class CustomSwitch extends StatelessWidget {
   const CustomSwitch({super.key});
 
   @override
